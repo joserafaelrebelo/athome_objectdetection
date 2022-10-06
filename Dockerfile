@@ -1,14 +1,28 @@
-FROM python:3.6-slim
+FROM nvcr.io/nvidia/l4t-ml:r32.7.1-py3
 
 RUN apt-get update
-RUN apt-get install -y wget
+RUN apt-get install -y \
+                        build-essential \
+                        git \
+                        libopenblas-dev \
+                        libopencv-dev \
+                        python3-pip \
+                        python-numpy
+
+RUN pip3 install --upgrade \
+                        pip \
+                        setuptools \
+                        numpy
 
 
-RUN apt-get install -y git build-essential libopenblas-dev python3-pip
-RUN pip3 install -U pip
+RUN git clone --recursive https://github.com/apache/incubator-mxnet.git mxnet
 
-RUN wget https://mxnet-public.s3.us-east-2.amazonaws.com/install/jetson/1.6.0/mxnet_cu102-1.6.0-py2.py3-none-linux_aarch64.whl
-RUN pip3 install mxnet_cu102-1.6.0-py2.py3-none-linux_aarch64.whl
+
+ENV export PATH=/usr/local/cuda/bin:$PATH
+ENV export MXNET_HOME=$HOME/mxnet/
+ENV export PYTHONPATH=$MXNET_HOME/python:$PYTHONPATH
+
+$MXNET_HOME/ci/build.py -p jetson
 
 RUN apt-get install -y python3-scipy python3-pil python3-matplotlib
 RUN apt autoremove -y
